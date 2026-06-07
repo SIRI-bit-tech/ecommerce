@@ -23,6 +23,8 @@ import { Providers } from "@/components/providers";
 import { Navbar } from "@/components/navbar";
 import { PromoTicker } from "@/components/promo-ticker";
 import { CartSidebar } from "@/components/cart-sidebar";
+import { StyleAssistantWidget } from "@/components/style-assistant-widget";
+import { MobileMenu } from "@/components/mobile-menu";
 
 export default function RootLayout({
   children,
@@ -30,7 +32,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en" className="dark" suppressHydrationWarning>
       <body
         className={`${inter.variable} ${cormorant.variable} antialiased font-sans flex flex-col min-h-screen`}
       >
@@ -38,6 +40,8 @@ export default function RootLayout({
           <PromoTicker />
           <Navbar />
           <CartSidebar />
+          <MobileMenu />
+          <StyleAssistantWidget />
           <main className="flex-1 flex flex-col">
             {children}
           </main>

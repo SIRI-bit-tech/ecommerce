@@ -1,0 +1,35 @@
+services:
+  - type: web
+    name: reyvouge-backend
+    env: docker
+    dockerContext: .
+    dockerfilePath: Dockerfile
+    # Defines the environment variables your app expects.
+    # sync: false means you will provide these values securely in the Render Dashboard.
+    envVars:
+      - key: PORT
+        value: "4000"
+      - key: NODE_ENV
+        value: "production"
+      - key: DATABASE_URL
+        sync: false
+      - key: DIRECT_URL
+        sync: false
+      - key: BETTER_AUTH_SECRET
+        sync: false
+      - key: BETTER_AUTH_URL
+        sync: false
+      - key: FLUTTERWAVE_SECRET_KEY
+        sync: false
+      - key: FLUTTERWAVE_SECRET_HASH
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: ABLY_API_KEY
+        sync: false
+      - key: UPLOADTHING_TOKEN
+        sync: false
+      - key: FRONTEND_URL
+        sync: false

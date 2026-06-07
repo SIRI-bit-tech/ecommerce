@@ -103,9 +103,17 @@ export default function CheckoutPage() {
   });
 
   useEffect(() => {
-    if (session?.user?.name && !formData.fullName) {
+    if (session?.user && !formData.fullName) {
+      const u = session.user as any;
       // eslint-disable-next-line react-hooks/set-state-in-effect
-      setFormData(prev => ({ ...prev, fullName: session.user.name || "" }));
+      setFormData(prev => ({ 
+        ...prev, 
+        fullName: u.name || prev.fullName,
+        phone: u.phoneNumber || prev.phone,
+        address: u.address || prev.address,
+        city: u.city || prev.city,
+        state: u.state || prev.state
+      }));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session]);

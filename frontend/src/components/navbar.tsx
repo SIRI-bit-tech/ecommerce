@@ -66,7 +66,6 @@ export function Navbar() {
               </div>
             </div>
           </div>
-          <Link href="/style-assistant" className="hover:text-brand-gold transition-colors">Style Assistant</Link>
         </nav>
 
         {/* Icons */}

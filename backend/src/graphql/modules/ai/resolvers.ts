@@ -121,12 +121,17 @@ export const aiResolvers = {
         You have access to this catalog: 
         ${JSON.stringify(products)}
         
-        When recommending products, mention their exact names so the user can search for them.
+        When recommending products, you MUST link to them using markdown format: [Product Name](/product/<id>).
+        For example: [Premium Linen Suit](/product/12345).
+        Do NOT just bold the product name. Always use the markdown link so users can click it.
         Be concise, stylish, and helpful.
       `;
 
 			const chat = geminiModelStream.startChat({
-				systemInstruction,
+				systemInstruction: {
+					role: "system",
+					parts: [{ text: systemInstruction }],
+				},
 				history: [],
 			});
 
@@ -169,10 +174,17 @@ async function processChatStream(
 		}
 
 		await publishToChannel(`chat-${sessionId}`, "done", { status: "complete" });
-	} catch (err) {
+	} catch (err: any) {
 		console.error("Chat stream error:", err);
+		
+		let errorMessage = "Sorry, I encountered an error. Please try again.";
+		
+		if (err?.status === 429) {
+			errorMessage = "I'm currently receiving too many requests right now. Please wait about 30 seconds and try again!";
+		}
+
 		await publishToChannel(`chat-${sessionId}`, "error", {
-			message: "Failed to generate response",
+			message: errorMessage,
 		});
 	}
 }

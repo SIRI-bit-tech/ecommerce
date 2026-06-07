@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { useSession, signOut } from "@/lib/auth-client";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
@@ -10,25 +11,23 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
   const router = useRouter();
   const pathname = usePathname();
 
-  if (isPending) {
-    return (
-      <div className="flex-1 flex items-center justify-center">
-        <Loader2 className="animate-spin text-brand-gold" size={48} />
-      </div>
-    );
-  }
-
-  if (!session) {
-    if (typeof window !== "undefined") {
-      router.push("/login");
+  useEffect(() => {
+    if (!isPending) {
+      if (!session) {
+        router.push("/login");
+      } else if ((session.user as any).role === "ADMIN") {
+        router.push("/admin");
+      }
     }
-    return null;
-  }
+  }, [session, isPending, router]);
 
-  // Prevent admin from accessing customer account settings/pages
-  if ((session.user as any).role === "ADMIN") {
-    if (typeof window !== "undefined") {
-      router.push("/admin");
+  if (isPending || !session || (session.user as any).role === "ADMIN") {
+    if (isPending) {
+      return (
+        <div className="flex-1 flex items-center justify-center">
+          <Loader2 className="animate-spin text-brand-gold" size={48} />
+        </div>
+      );
     }
     return null;
   }

@@ -3,18 +3,18 @@ import { env } from "../config/env.js";
 
 export const resend = new Resend(env.RESEND_API_KEY);
 
-const FROM_EMAIL = "Rey's Vogue <noreply@reyvouge.com>";
+const FROM_EMAIL = "Rey's Vogue <noreply@standardcrestintlb.com>";
 
 // ─── Utility: format kobo to Naira ──────────────────────────────────────────
 
 function formatNaira(kobo: number): string {
-	return `₦${(kobo / 100).toLocaleString("en-NG", { minimumFractionDigits: 2 })}`;
+  return `₦${(kobo / 100).toLocaleString("en-NG", { minimumFractionDigits: 2 })}`;
 }
 
 // ─── Email Templates ────────────────────────────────────────────────────────
 
 function baseLayout(content: string): string {
-	return `
+  return `
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -63,10 +63,10 @@ function baseLayout(content: string): string {
 // ─── Welcome Email ──────────────────────────────────────────────────────────
 
 export async function sendWelcomeEmail(
-	to: string,
-	fullName: string,
+  to: string,
+  fullName: string,
 ): Promise<void> {
-	const content = `
+  const content = `
     <h2 style="margin:0 0 16px;font-size:28px;font-weight:700;color:#ffffff;text-transform:uppercase;letter-spacing:1px;">
       Welcome, ${fullName}
     </h2>
@@ -78,22 +78,22 @@ export async function sendWelcomeEmail(
     </a>
   `;
 
-	await resend.emails.send({
-		from: FROM_EMAIL,
-		to,
-		subject: "Welcome to Rey's Vogue",
-		html: baseLayout(content),
-	});
+  await resend.emails.send({
+    from: FROM_EMAIL,
+    to,
+    subject: "Welcome to Rey's Vogue",
+    html: baseLayout(content),
+  });
 }
 
 // ─── Password Reset Email ───────────────────────────────────────────────────
 
 export async function sendPasswordResetEmail(
-	to: string,
-	fullName: string,
-	resetUrl: string,
+  to: string,
+  fullName: string,
+  resetUrl: string,
 ): Promise<void> {
-	const content = `
+  const content = `
     <h2 style="margin:0 0 16px;font-size:28px;font-weight:700;color:#ffffff;text-transform:uppercase;letter-spacing:1px;">
       Reset Your Password
     </h2>
@@ -111,45 +111,83 @@ export async function sendPasswordResetEmail(
     </p>
   `;
 
-	await resend.emails.send({
-		from: FROM_EMAIL,
-		to,
-		subject: "Reset Your Password — Rey's Vogue",
-		html: baseLayout(content),
-	});
+  await resend.emails.send({
+    from: FROM_EMAIL,
+    to,
+    subject: "Reset Your Password — Rey's Vogue",
+    html: baseLayout(content),
+  });
+}
+
+// ─── OTP Email ──────────────────────────────────────────────────────────────
+
+export async function sendOTPEmail(
+  to: string,
+  otp: string,
+): Promise<void> {
+  const content = `
+    <h2 style="margin:0 0 16px;font-size:28px;font-weight:700;color:#ffffff;text-transform:uppercase;letter-spacing:1px;">
+      Verify Your Email
+    </h2>
+    <p style="margin:0 0 24px;font-size:16px;color:#bbbbbb;line-height:1.6;">
+      Please use the verification code below to complete your registration.
+    </p>
+    <div style="background-color:#1a1a1a;padding:24px;text-align:center;border:1px dashed #c9a96e;margin-bottom:24px;">
+      <span style="font-size:36px;font-weight:700;color:#c9a96e;letter-spacing:8px;">${otp}</span>
+    </div>
+    <p style="margin:0;font-size:14px;color:#7e7e7e;line-height:1.5;">
+      This code will expire in a few minutes. Do not share it with anyone.
+    </p>
+  `;
+
+  try {
+    const { data, error } = await resend.emails.send({
+      from: FROM_EMAIL,
+      to,
+      subject: "Verification Code — Rey's Vogue",
+      html: baseLayout(content),
+    });
+    if (error) {
+      console.error("Resend error sending OTP:", error);
+    } else {
+      console.log("OTP email sent successfully:", data);
+    }
+  } catch (error) {
+    console.error("Caught error sending OTP email:", error);
+  }
 }
 
 // ─── Order Confirmation Email ───────────────────────────────────────────────
 
 interface OrderEmailData {
-	orderId: string;
-	fullName: string;
-	items: Array<{
-		name: string;
-		quantity: number;
-		unitPrice: number;
-		size?: string;
-		color?: string;
-	}>;
-	subtotal: number;
-	shippingFee: number;
-	total: number;
-	paymentMethod: string;
-	shippingAddress: {
-		fullName: string;
-		address: string;
-		city: string;
-		state: string;
-	};
+  orderId: string;
+  fullName: string;
+  items: Array<{
+    name: string;
+    quantity: number;
+    unitPrice: number;
+    size?: string;
+    color?: string;
+  }>;
+  subtotal: number;
+  shippingFee: number;
+  total: number;
+  paymentMethod: string;
+  shippingAddress: {
+    fullName: string;
+    address: string;
+    city: string;
+    state: string;
+  };
 }
 
 export async function sendOrderConfirmationEmail(
-	to: string,
-	data: OrderEmailData,
+  to: string,
+  data: OrderEmailData,
 ): Promise<void> {
-	const itemRows = data.items
-		.map(
-			(item) => `
+  const itemRows = data.items
+    .map(
+      (item) => `
       <tr>
         <td style="padding:12px 0;border-bottom:1px solid #262626;color:#bbbbbb;font-size:14px;">
           ${item.name}${item.size ? ` — ${item.size}` : ""}${item.color ? ` — ${item.color}` : ""}
@@ -161,10 +199,10 @@ export async function sendOrderConfirmationEmail(
           ${formatNaira(item.unitPrice * item.quantity)}
         </td>
       </tr>`,
-		)
-		.join("");
+    )
+    .join("");
 
-	const content = `
+  const content = `
     <h2 style="margin:0 0 8px;font-size:28px;font-weight:700;color:#ffffff;text-transform:uppercase;letter-spacing:1px;">
       Order Confirmed
     </h2>
@@ -213,82 +251,82 @@ export async function sendOrderConfirmationEmail(
     </a>
   `;
 
-	await resend.emails.send({
-		from: FROM_EMAIL,
-		to,
-		subject: `Order Confirmed — #${data.orderId.slice(-8).toUpperCase()}`,
-		html: baseLayout(content),
-	});
+  await resend.emails.send({
+    from: FROM_EMAIL,
+    to,
+    subject: `Order Confirmed — #${data.orderId.slice(-8).toUpperCase()}`,
+    html: baseLayout(content),
+  });
 }
 
 // ─── Order Status Update Email ──────────────────────────────────────────────
 
 export async function sendOrderStatusEmail(
-	to: string,
-	fullName: string,
-	orderId: string,
-	status: string,
-	trackingInfo?: string,
-	cancellationReason?: string,
+  to: string,
+  fullName: string,
+  orderId: string,
+  status: string,
+  trackingInfo?: string,
+  cancellationReason?: string,
 ): Promise<void> {
-	const statusLabels: Record<
-		string,
-		{ title: string; message: string; color: string }
-	> = {
-		CONFIRMED: {
-			title: "Order Confirmed",
-			message: "Your order has been confirmed and is being prepared.",
-			color: "#c9a96e",
-		},
-		PROCESSING: {
-			title: "Order Processing",
-			message:
-				"Your order is currently being processed and will be shipped soon.",
-			color: "#1c69d4",
-		},
-		SHIPPED: {
-			title: "Order Shipped",
-			message: "Your order has been shipped and is on its way to you.",
-			color: "#0fa336",
-		},
-		DELIVERED: {
-			title: "Order Delivered",
-			message:
-				"Your order has been delivered. We hope you enjoy your purchase!",
-			color: "#0fa336",
-		},
-		CANCELLED: {
-			title: "Order Cancelled",
-			message: "Your order has been cancelled.",
-			color: "#e22718",
-		},
-	};
+  const statusLabels: Record<
+    string,
+    { title: string; message: string; color: string }
+  > = {
+    CONFIRMED: {
+      title: "Order Confirmed",
+      message: "Your order has been confirmed and is being prepared.",
+      color: "#c9a96e",
+    },
+    PROCESSING: {
+      title: "Order Processing",
+      message:
+        "Your order is currently being processed and will be shipped soon.",
+      color: "#1c69d4",
+    },
+    SHIPPED: {
+      title: "Order Shipped",
+      message: "Your order has been shipped and is on its way to you.",
+      color: "#0fa336",
+    },
+    DELIVERED: {
+      title: "Order Delivered",
+      message:
+        "Your order has been delivered. We hope you enjoy your purchase!",
+      color: "#0fa336",
+    },
+    CANCELLED: {
+      title: "Order Cancelled",
+      message: "Your order has been cancelled.",
+      color: "#e22718",
+    },
+  };
 
-	const info = statusLabels[status] ?? {
-		title: `Order ${status}`,
-		message: `Your order status has been updated to ${status}.`,
-		color: "#c9a96e",
-	};
+  const info = statusLabels[status] ?? {
+    title: `Order ${status}`,
+    message: `Your order status has been updated to ${status}.`,
+    color: "#c9a96e",
+  };
 
-	let extraContent = "";
-	if (status === "SHIPPED" && trackingInfo) {
-		extraContent = `
+  let extraContent = "";
+  if (status === "SHIPPED" && trackingInfo) {
+    extraContent = `
       <div style="padding:16px;background-color:#0d0d0d;border:1px solid #262626;margin:16px 0;">
         <p style="margin:0 0 4px;font-size:12px;color:#7e7e7e;font-weight:700;letter-spacing:1px;text-transform:uppercase;">Tracking Info</p>
         <p style="margin:0;font-size:14px;color:#c9a96e;">${trackingInfo}</p>
       </div>
     `;
-	}
-	if (status === "CANCELLED" && cancellationReason) {
-		extraContent = `
+  }
+  if (status === "CANCELLED" && cancellationReason) {
+    extraContent = `
       <div style="padding:16px;background-color:#0d0d0d;border:1px solid #262626;margin:16px 0;">
         <p style="margin:0 0 4px;font-size:12px;color:#7e7e7e;font-weight:700;letter-spacing:1px;text-transform:uppercase;">Reason</p>
         <p style="margin:0;font-size:14px;color:#bbbbbb;">${cancellationReason}</p>
       </div>
     `;
-	}
+  }
 
-	const content = `
+  const content = `
     <div style="margin-bottom:24px;padding:16px;border-left:4px solid ${info.color};">
       <h2 style="margin:0 0 8px;font-size:28px;font-weight:700;color:#ffffff;text-transform:uppercase;letter-spacing:1px;">
         ${info.title}
@@ -304,10 +342,10 @@ export async function sendOrderStatusEmail(
     </a>
   `;
 
-	await resend.emails.send({
-		from: FROM_EMAIL,
-		to,
-		subject: `${info.title} — #${orderId.slice(-8).toUpperCase()}`,
-		html: baseLayout(content),
-	});
+  await resend.emails.send({
+    from: FROM_EMAIL,
+    to,
+    subject: `${info.title} — #${orderId.slice(-8).toUpperCase()}`,
+    html: baseLayout(content),
+  });
 }

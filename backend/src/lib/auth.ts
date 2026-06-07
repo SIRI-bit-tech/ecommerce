@@ -1,8 +1,9 @@
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
+import { emailOTP } from "better-auth/plugins";
 import { env } from "../config/env.js";
 import { prisma } from "./prisma.js";
-import { sendPasswordResetEmail, sendWelcomeEmail } from "./resend.js";
+import { sendPasswordResetEmail, sendWelcomeEmail, sendOTPEmail } from "./resend.js";
 
 export const auth = betterAuth({
 	database: prismaAdapter(prisma, {
@@ -11,9 +12,18 @@ export const auth = betterAuth({
 	secret: env.BETTER_AUTH_SECRET,
 	baseURL: env.BETTER_AUTH_URL,
 	trustedOrigins: [env.FRONTEND_URL],
+	plugins: [
+		emailOTP({
+			async sendVerificationOTP({ email, otp, type }) {
+				if (type === "sign-in" || type === "email-verification") {
+					await sendOTPEmail(email, otp);
+				}
+			},
+		}),
+	],
 	emailAndPassword: {
 		enabled: true,
-		requireEmailVerification: false,
+		requireEmailVerification: true,
 		sendResetPassword: async ({ user, url }) => {
 			await sendPasswordResetEmail(user.email, user.name, url);
 		},
@@ -23,6 +33,26 @@ export const auth = betterAuth({
 			fullName: {
 				type: "string",
 				required: true,
+				input: true,
+			},
+			phoneNumber: {
+				type: "string",
+				required: false,
+				input: true,
+			},
+			address: {
+				type: "string",
+				required: false,
+				input: true,
+			},
+			city: {
+				type: "string",
+				required: false,
+				input: true,
+			},
+			state: {
+				type: "string",
+				required: false,
 				input: true,
 			},
 			role: {

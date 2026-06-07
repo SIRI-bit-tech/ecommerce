@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { gql } from "@apollo/client";
@@ -45,19 +46,54 @@ function formatNaira(kobo: number) {
 
 export default function Home() {
   const { data, loading } = useQuery<HomeData>(GET_HOME_PRODUCTS);
+  const [videoIndex, setVideoIndex] = useState(0);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  
+  const videos = [
+    "/Make_it_realistic_and_the_link.mp4",
+    "/A_hyper_realistic_documentary.mp4"
+  ];
+
+  // Pause video when user scrolls away from the hero section
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (videoRef.current) {
+            if (entry.isIntersecting) {
+              // Note: Browsers may block unmuted autoplay until user interacts with the page
+              videoRef.current.play().catch(e => console.log("Autoplay blocked by browser:", e));
+            } else {
+              videoRef.current.pause();
+            }
+          }
+        });
+      },
+      { threshold: 0.1 }
+    );
+
+    if (videoRef.current) {
+      observer.observe(videoRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, [videoIndex]);
 
   return (
     <div className="flex flex-col min-h-screen">
       {/* ─── Hero Section ──────────────────────────────────────────────────────── */}
       <section className="relative h-[85vh] w-full bg-black overflow-hidden flex items-center">
-        <Image
-          src="/hero.png"
-          alt="Premium Men's Fashion"
-          fill
-          priority
-          className="object-cover opacity-60"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent" />
+        <video
+          ref={videoRef}
+          key={videos[videoIndex]}
+          autoPlay
+          playsInline
+          className="absolute inset-0 w-full h-full object-cover opacity-60 transition-opacity duration-1000"
+          onEnded={() => setVideoIndex((prev) => (prev + 1) % videos.length)}
+        >
+          <source src={videos[videoIndex]} type="video/mp4" />
+        </video>
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent z-0" />
         
         <div className="container relative z-10 mx-auto px-4 lg:px-8">
           <div className="max-w-3xl py-16">
@@ -75,12 +111,6 @@ export default function Home() {
                 className="bg-brand-gold hover:bg-brand-gold-light text-black font-bold uppercase tracking-[0.15em] px-8 py-4 flex items-center justify-center transition-colors text-sm"
               >
                 Explore Collection
-              </Link>
-              <Link 
-                href="/style-assistant"
-                className="bg-transparent border border-white text-white hover:bg-white hover:text-black font-bold uppercase tracking-[0.15em] px-8 py-4 flex items-center justify-center transition-colors text-sm gap-2"
-              >
-                <Sparkles size={16} /> AI Style Assistant
               </Link>
             </div>
           </div>
@@ -101,14 +131,19 @@ export default function Home() {
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
-              { title: "Male Wears", tag: "MALE_WEAR" },
-              { title: "Female Wears", tag: "FEMALE_WEAR" },
-              { title: "Footwear & Fragrance", tag: "SHOE" }
+              { title: "Male Wears", tag: "MALE_WEAR", image: "https://images.unsplash.com/photo-1617137968427-85924c800a22?w=800&q=80" },
+              { title: "Female Wears", tag: "FEMALE_WEAR", image: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=800&q=80" },
+              { title: "Footwear & Fragrance", tag: "SHOE", image: "https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=800&q=80" }
             ].map((cat, i) => (
               <Link key={i} href={`/shop?category=${cat.tag}`} className="group relative aspect-[4/5] bg-background border border-border overflow-hidden flex items-end p-8">
-                {/* Fallback placeholder since we have no real images yet */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent z-10" />
-                <div className="absolute inset-0 bg-muted/20 group-hover:bg-muted/40 transition-colors duration-500" />
+                <Image 
+                  src={cat.image} 
+                  alt={cat.title} 
+                  fill 
+                  className="object-cover group-hover:scale-105 transition-transform duration-700 opacity-80"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent z-10" />
+                <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors duration-500 z-10" />
                 
                 <div className="relative z-20 w-full">
                   <h3 className="text-2xl font-serif font-bold uppercase text-white mb-2">{cat.title}</h3>
