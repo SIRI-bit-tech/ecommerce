@@ -1,6 +1,7 @@
 FROM node:20-alpine
 
-# Install bun globally
+# Install openssl (required by Prisma) and bun globally
+RUN apk add --no-cache openssl
 RUN npm install -g bun
 
 WORKDIR /app
@@ -14,8 +15,8 @@ RUN bun install --frozen-lockfile
 # Copy the rest of the application code
 COPY . .
 
-# Generate Prisma client
-RUN bunx prisma generate
+# Generate Prisma client using npx to ensure Node.js correctly detects the Alpine OpenSSL version
+RUN npx prisma generate
 
 # Compile TypeScript to JavaScript in the dist/ folder
 RUN bun run build
